@@ -553,8 +553,8 @@ class AscendW8A8DynamicFusedMoEMethod:
 
         from vllm.config import get_current_vllm_config
         vllm_config = get_current_vllm_config()
-        self.global_batch_size = vllm_config.scheduler_config.max_num_seqs
-        self.token_selector = torch.arange(0, self.global_batch_size, dtype=torch.int32)
+        self.max_token_nums = vllm_config.scheduler_config.max_num_batched_tokens
+        self.token_selector = torch.arange(0, self.max_token_nums, dtype=torch.int32)
 
         try:
             device_group = self.ep_group.device_group
