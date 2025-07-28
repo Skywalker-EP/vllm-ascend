@@ -1063,8 +1063,7 @@ class AscendFusedMoE(FusedMoE):
                                                 self.moe_instance_id,
                                                 get_ep_group().rank_in_group)
             self.log2phy = expert_load_balancer.get_rank_log2phy_map(
-                self.moe_instance_id,
-                get_ep_group().rank_in_group)
+                self.moe_instance_id)
             self.global_redundant_expert_num = \
                         expert_load_balancer.get_global_redundant_expert_num()
         else:

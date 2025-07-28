@@ -117,9 +117,11 @@ def fused_experts_with_mc2(
     log2phy: torch.Tensor = None,
     global_redundant_expert_num: int = 0,
     shared_experts: Optional[Any] = None,
+    token_selector: torch.Tensor = None,
 ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
     if log2phy is not None:
-        topk_ids = log2phy[topk_ids]
+        log2phy_map, num_experts = log2phy
+        topk_ids = log2phy_map[topk_ids, token_selector[: topk_ids.shape[0], None] % num_experts[topk_ids].squeeze(-1)]
     global_bs = 0
     moe_expert_num = len(expert_map) + global_redundant_expert_num
     # hidden_states = hidden_states.bfloat16()
@@ -233,9 +235,11 @@ def fused_experts_with_all2all(
     ep_group: GroupCoordinator = None,
     log2phy: torch.Tensor = None,
     global_redundant_expert_num: int = 0,
+    token_selector: torch.Tensor = None,
 ):
     if log2phy is not None:
-        topk_ids = log2phy[topk_ids]
+        log2phy_map, num_experts = log2phy
+        topk_ids = log2phy_map[topk_ids, token_selector[: topk_ids.shape[0], None] % num_experts[topk_ids].squeeze(-1)]
     original_shape = hidden_states.shape
     if len(original_shape) == 3:
         hidden_states = hidden_states.view(-1, hidden_states.shape[-1])
@@ -547,6 +551,11 @@ class AscendW8A8DynamicFusedMoEMethod:
         ascend_config = get_ascend_config()
         self.torchair_graph_enabled = ascend_config.torchair_graph_config.enabled
 
+        from vllm.config import get_current_vllm_config
+        vllm_config = get_current_vllm_config()
+        self.global_batch_size = vllm_config.scheduler_config.max_num_seqs
+        self.token_selector = torch.arange(0, self.global_batch_size, dtype=torch.int32)
+
         try:
             device_group = self.ep_group.device_group
             # TODO: Try local_rank = ep_group.rank_in_group
@@ -678,6 +687,7 @@ class AscendW8A8DynamicFusedMoEMethod:
                 log2phy=log2phy,
                 global_redundant_expert_num=global_redundant_expert_num,
                 shared_experts=shared_experts,
+                token_selector=self.token_selector,
                 **kwargs)
         elif fused_moe_state == FusedMoEState.AllGather:
             return fused_experts(hidden_states=x,
@@ -707,6 +717,7 @@ class AscendW8A8DynamicFusedMoEMethod:
                 ep_group=self.ep_group,
                 log2phy=log2phy,
                 global_redundant_expert_num=global_redundant_expert_num,
+                token_selector=self.token_selector,
             )
 
     def process_weights_after_loading(self, layer):
