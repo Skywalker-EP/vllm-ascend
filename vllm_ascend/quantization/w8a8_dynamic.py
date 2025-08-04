@@ -121,7 +121,7 @@ def fused_experts_with_mc2(
 ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
     if log2phy is not None:
         log2phy_map, num_experts = log2phy
-        topk_ids = log2phy_map[topk_ids, token_selector[: topk_ids.shape[0], None] % num_experts[topk_ids].squeeze(-1)]
+        topk_ids = log2phy_map[topk_ids, token_selector[: topk_ids.shape[0]] % num_experts[topk_ids]]
     global_bs = 0
     moe_expert_num = len(expert_map) + global_redundant_expert_num
     # hidden_states = hidden_states.bfloat16()
@@ -239,7 +239,7 @@ def fused_experts_with_all2all(
 ):
     if log2phy is not None:
         log2phy_map, num_experts = log2phy
-        topk_ids = log2phy_map[topk_ids, token_selector[: topk_ids.shape[0], None] % num_experts[topk_ids].squeeze(-1)]
+        topk_ids = log2phy_map[topk_ids, token_selector[: topk_ids.shape[0]] % num_experts[topk_ids]]
     original_shape = hidden_states.shape
     if len(original_shape) == 3:
         hidden_states = hidden_states.view(-1, hidden_states.shape[-1])
