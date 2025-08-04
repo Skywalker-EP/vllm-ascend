@@ -223,7 +223,7 @@ eplb-without 	没有开启prefill阶段热度采集，其余开启prefill阶段�
 | ---- | ---------- | -------- | -------- |
 |https://github.com/Skywalker-EP/vllm-ascend/commit/b3a1718bed22eefe9941b1a0ea16f75b4f2c08a2 | 2025-07-25 |  TA-ELB 拓扑亲和专家均衡部署  | 徐天宇 00882759  |
 |https://github.com/Skywalker-EP/vllm-ascend/commit/55dfc7ca330516546f19ad544709790af496ab83 | 2025-07-29 |  TA-ELB 拓扑亲和专家路由  | 杨诚 00806874  |
-|https://github.com/Skywalker-EP/vllm-ascend/commit/55dfc7ca330516546f19ad544709790af496ab83 | 2025-07-29 |  TA-ELB 拓扑亲和专家路由  | 杨诚 00806874  |
+|https://github.com/Skywalker-EP/vllm-ascend/commit/494cbb83edd9111357b05c7adeec0680d1012d4e | 2025-07-31 |  多流优化  | 陈浩 00562869  |
 
 ### 参考文档
 1.  
