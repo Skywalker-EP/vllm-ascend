@@ -112,7 +112,7 @@ class ExpertLoadBalancer(object):
 
     def update_expert_loc_map_v1(self, expert_loc, current_rank):
 
-        device_per_host = 16
+        device_per_host = 8
         ep_size = get_ep_group().world_size
         current_node, current_rank_in_node = current_rank // device_per_host, current_rank % device_per_host
         redundancy_shared_expert_num = self.get_global_redundant_expert_num()

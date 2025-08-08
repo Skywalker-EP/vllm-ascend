@@ -373,7 +373,7 @@ class DynamicEplb(EplbPolicy):
 
             # Obtain the globally balanced placement strategy for each layer
             result, layer_deployment = self.original_compute_balanced_pack_redundancy(
-                weights, num_npus, num_redundancy_expert, self.config.num_die_per_host
+                weights, num_npus, num_redundancy_expert, 8
             )
 
             global_deployment[layer] = layer_deployment
