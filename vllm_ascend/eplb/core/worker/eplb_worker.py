@@ -67,6 +67,7 @@ class EplbWorker:
         if not torch.is_tensor(new_placement):
             new_placement = torch.tensor(new_placement)
         self.check_expert_placement(old_placement, new_placement)
+        phy_map, num_experts = self.dynamic_generate_log2phy_expert_map(new_placement)
         new_expert_maps = self.local2global(new_placement)
         self.update_expert_map(new_expert_maps)
         logger.debug(f"[EPLB Process  new_map differs, performing D2D")
@@ -76,9 +77,33 @@ class EplbWorker:
         self.old_expert_maps = new_expert_maps
         logger.info("EPLB Process compute complete")
 
-        packed_update_info = self.pack_update_info(update_info)
+        packed_update_info = self.pack_update_info(update_info, phy_map)
 
         return packed_update_info
+
+    def dynamic_generate_log2phy_expert_map(self, expert_map_tensor, max_num_experts=10, global_expert_num=256):
+        num_layers = expert_map_tensor.shape[0]
+        per_layer_dicts = []
+        for layer_id in range(num_layers):
+            concatenated = torch.flatten(expert_map_tensor[layer_id])
+            result_dict: Dict[int, List[int]] = {}
+            for idx, value in enumerate(concatenated):
+                key = value.item()
+                if key not in result_dict:
+                    result_dict[key] = []
+                result_dict[key].append(idx)
+            per_layer_dicts.append(result_dict)
+
+        log2phy_map = torch.full((num_layers, global_expert_num, max_num_experts),
+                                0,
+                                dtype = torch.int32)
+        num_experts = torch.ones((num_layers, global_expert_num), dtype=torch.int32)
+        for layer_id, result_dict in enumerate(per_layer_dicts):
+            for log_ids, phy_ids in result_dict.items():
+                log2phy_map[layer_id, log_ids, :len(phy_ids)] = torch.tensor(phy_ids, dtype=torch.int32)
+                num_experts[layer_id, log_ids] = len(phy_ids)
+        return log2phy_map, num_experts
+
 
     def check_expert_placement(self, old_placement, new_placement):
         num_layers = old_placement.shape[0]
@@ -324,7 +349,7 @@ class EplbWorker:
 
         return placement_global
 
-    def pack_update_info(self, update_info_generator):
+    def pack_update_info(self, update_info_generator, phy_map):
         """
         Pack a list of update info tuples for efficient IPC.
         """
@@ -344,8 +369,7 @@ class EplbWorker:
             maps.append(new_expert_map[self.rank_id].numpy().tolist())
 
             if self.redundant_enable:
-                log2phy_map = ExpertMapUtils.generate_log2phy_map(new_expert_map)
-                log2phy_all.append(log2phy_map[self.rank_id].numpy().tolist())
+                log2phy_all.append(phy_map[layer_id].detach().cpu().numpy().tolist())
             else:
                 log2phy_all.append([])
 

@@ -68,7 +68,7 @@ class ExpertLoadBalancer(object):
                 result_dict[key] = []
             result_dict[key].append(idx)
 
-        max_num_experts = max(len(locs) for locs in result_dict.values())
+        max_num_experts = 10
         log2phy_map = torch.full((self.global_expert_num, max_num_experts),
                                  0,
                                  dtype=torch.int32)
