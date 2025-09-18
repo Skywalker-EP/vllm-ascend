@@ -33,7 +33,7 @@ class EplbAdaptor():
     @abstractmethod
     def do_update_expert_map(self):
         raise NotImplementedError
-    
+
     @abstractmethod
     def do_update_expert_weight(self):
         raise NotImplementedError

@@ -70,52 +70,37 @@ class DynamicEplb(EplbPolicy):
         box_counts = [0] * card_num  # To store the number of items in each box
         index = 0
         expert_in_hosts = [[0] * host_num for _ in range(route_expert_num)]
-        for i in range(route_expert_num):
-            redundancy_num = len(route_expert_redundancy[i])
-            for _ in range(redundancy_num):
-                cur_weight = 0
-                for item, weight in origin_weights:
-                    if item == i:
-                        cur_weight = weight
-
-                boxes[index].append(i)
-                boxes_weights[index].append(cur_weight)
-                box_weights[index] += cur_weight
-                box_counts[index] += 1
-                # consider per host balance for redundant experts
-                expert_in_hosts[i][index // card_per_host] += 1
-                index = (index + 1 + card_per_host) % card_num
 
         sorted_indices = np.argsort([t[1] for t in origin_weights], kind='stable')[::-1]
         origin_weights = [origin_weights[idx] for idx in sorted_indices]
-        check_pair = [[(i-1) % host_num, (i+1) % host_num] for i in range(host_num)]
         # Step 4: Distribute items into boxes based on weight
         for item_id, weight in origin_weights:
             # Find the box with the least items but not full
-            min_box_index = -1
-            for i in range(card_num):
-                host_id = i // card_per_host
-                max_count = max(expert_in_hosts[item_id])
-                min_count = min(expert_in_hosts[item_id])
-                if (expert_in_hosts[item_id][host_id] > expert_in_hosts[item_id][check_pair[host_id][0]]
-                    or expert_in_hosts[item_id][host_id] > expert_in_hosts[item_id][check_pair[host_id][1]]
-                    or (max_count != min_count and expert_in_hosts[item_id][host_id] != min_count)
-                    or item_id in boxes[i]):
-                    continue
-                # Only choose boxes that still have space (box_counts[i] < items_per_box)
-                if box_counts[i] < items_per_box or (box_counts[i] == items_per_box and remaining_items > 0):
-                    if min_box_index == -1 or box_weights[i] < box_weights[min_box_index]:
-                        min_box_index = i
+            cur_phy_experts = len(route_expert_redundancy[item_id] + 1)
+            for _ in range(cur_phy_experts):
+                min_box_index = -1
+                for i in range(card_num):
+                    host_id = i // card_per_host
+                    max_count = max(expert_in_hosts[item_id])
+                    min_count = min(expert_in_hosts[item_id])
+                    if ((max_count != min_count and expert_in_hosts[item_id][host_id] != min_count)
+                        or item_id in boxes[i]):
+                        continue
+                    # Only choose boxes that still have space (box_counts[i] < items_per_box)
+                    if box_counts[i] < items_per_box or (box_counts[i] == items_per_box and remaining_items > 0):
+                        if min_box_index == -1 or box_weights[i] < box_weights[min_box_index]:
+                            min_box_index = i
+                expert_in_hosts[item_id][min_box_index // card_per_host] += 1
 
-            # Place the item (id) into the selected box
-            boxes[min_box_index].append(item_id)
-            boxes_weights[min_box_index].append(weight)
-            box_weights[min_box_index] += weight
-            box_counts[min_box_index] += 1
+                # Place the item (id) into the selected box
+                boxes[min_box_index].append(item_id)
+                boxes_weights[min_box_index].append(weight)
+                box_weights[min_box_index] += weight
+                box_counts[min_box_index] += 1
 
-            # If there's an imbalance in the remaining items, reduce the "remaining_items" counter
-            if box_counts[min_box_index] == (items_per_box + 1) and remaining_items > 0:
-                remaining_items -= 1
+                # If there's an imbalance in the remaining items, reduce the "remaining_items" counter
+                if box_counts[min_box_index] == (items_per_box + 1) and remaining_items > 0:
+                    remaining_items -= 1
 
         # Step 5: Output each box's contents and total weight
         result = []
