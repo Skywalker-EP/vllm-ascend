@@ -76,7 +76,7 @@ class DynamicEplb(EplbPolicy):
         # Step 4: Distribute items into boxes based on weight
         for item_id, weight in origin_weights:
             # Find the box with the least items but not full
-            cur_phy_experts = len(route_expert_redundancy[item_id] + 1)
+            cur_phy_experts = len(route_expert_redundancy[item_id]) + 1
             for _ in range(cur_phy_experts):
                 min_box_index = -1
                 for i in range(card_num):
