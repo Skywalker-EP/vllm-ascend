@@ -208,6 +208,7 @@ class VllmEplbAdaptor(EplbAdaptor):
     def do_update_log2phy_map(self, layer_id, updated_log2phy_map):
         if self.log2phy_map_per_layer[layer_id] is not None:
             self.log2phy_map_per_layer[layer_id].copy_(updated_log2phy_map)
+            self.model.set_log2phy_map(layer_id, updated_log2phy_map)
 
     def global2local(self, placement: torch.Tensor,
                      E_local: int) -> torch.Tensor:

@@ -27,6 +27,8 @@ def get_expert_map(self, layer_id):
 def get_log2phy_map(self, layer_id):
     return self.model.layers[layer_id].mlp.experts.get_log2phy_map()
 
+def set_log2phy_map(self, layer_id, updated_log2phy):
+    return self.model.layers[layer_id].mlp.experts.set_log2phy_map(updated_log2phy)
 
 def get_all_expert_map(self, num_moe_layers):
     all_loads = []
@@ -62,6 +64,7 @@ def clear_all_moe_loads(self):
 def model_register(model, model_config):
     model.get_expert_map = types.MethodType(get_expert_map, model)
     model.get_log2phy_map = types.MethodType(get_log2phy_map, model)
+    model.set_log2phy_map = types.MethodType(set_log2phy_map, model)
     model.get_all_expert_map = types.MethodType(get_all_expert_map, model)
     model.get_all_moe_loads = types.MethodType(get_all_moe_loads, model)
     model.clear_all_moe_loads = types.MethodType(clear_all_moe_loads, model)
