@@ -27,6 +27,7 @@
 #include "ops.h"
 #include "utils.h"
 #include "mla_preprocess/op_host/mla_preprocess.h"
+#include "aclnn_torch_adapter/op_api_common.h"
 
 #include <c10/core/Device.h>
 #include <c10/util/Exception.h>

@@ -63,7 +63,8 @@ ascendc_library(vllm_ascend_kernels SHARED
 message("TORCH_NPU_PATH is ${TORCH_NPU_PATH}")
 
 file(GLOB VLLM_ASCEND_SRC
-${CMAKE_CURRENT_SOURCE_DIR}/csrc/*.cpp)
+${CMAKE_CURRENT_SOURCE_DIR}/csrc/*.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/csrc/aclnn_torch_adapter/*.cpp)
 
 include_directories(
   ${pybind11_INCLUDE_DIRS}
