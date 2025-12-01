@@ -44,7 +44,14 @@ from vllm_ascend.quantization.w8a8_dynamic import \
 from vllm_ascend.utils import (ACL_FORMAT_FRACTAL_NZ, AscendDeviceType,
                                enable_sp, get_ascend_device_type, is_enable_nz,
                                npu_stream_switch, shared_expert_dp_enabled,
-                               shared_experts_calculation_stream)
+                               shared_experts_calculation_stream, vllm_version_is)
+if vllm_version_is("0.11.0"):
+    from vllm.config import CompilationLevel
+    from vllm.model_executor.layers.shared_fused_moe import SharedFusedMoE
+else:
+    from vllm.config import CompilationMode
+    from vllm.model_executor.layers.fused_moe.shared_fused_moe import \
+        SharedFusedMoE
 
 
 class AscendUnquantizedFusedMoEMethod(UnquantizedFusedMoEMethod):
